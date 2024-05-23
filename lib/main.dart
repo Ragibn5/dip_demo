@@ -6,15 +6,18 @@ import 'package:flutter/material.dart';
 /// <b>High-level modules should not depend directly on low-level modules.
 /// Both should depend on abstractions.<br></b>
 /// <p>
-/// Here the high level module ([UserPreferenceManager]) depends directly on
-/// a concrete class ([MemoryUserPreference]).
+/// Here the high level module ([UserPreferenceManager]) still depends directly
+/// on a concrete class ([MemoryUserPreference]), but now we are constructor-
+/// injecting the dependency, giving us a bit more flexibility.
 ///<br><br>
 /// Problems:
-/// - Low level module is tightly coupled to high level module.
-/// - Hard to switch to another low level impl or test the [UserPreferenceManager].
+/// - Still depending on the concrete class.
+/// - Improved flexibility, but still not following DIP as dependencies
+/// are still concrete.
 /// </p>
 void main() {
-  final userPreferenceService = UserPreferenceManager();
+  final memoryUserPreference = MemoryUserPreference();
+  final userPreferenceService = UserPreferenceManager(memoryUserPreference);
 
   final currentUser = userPreferenceService.getUser();
   debugPrint(currentUser.toString());
@@ -42,7 +45,9 @@ class MemoryUserPreference {
 // High-level module
 ///////////////////
 class UserPreferenceManager {
-  final _memoryPreference = MemoryUserPreference();
+  final MemoryUserPreference _memoryPreference;
+
+  UserPreferenceManager(this._memoryPreference);
 
   User getUser() {
     return _memoryPreference.getUser();
