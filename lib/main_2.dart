@@ -6,58 +6,69 @@ import 'package:flutter/material.dart';
 /// <b>Abstractions should not depend on details.
 /// Details should depend on abstractions<br></b>
 /// <p>
-/// This is an extension of the previous step, which shows the potential
-/// problem we'd face if a high level abstraction uses concrete implementations
-/// of lower level. We Created another concrete implementation
-/// ([FileUserPreference]), and we had to change the high level abstraction in
-/// multiple ways, namely, we had to change the name of the existing methods to
-/// accommodate the upcoming 2 methods, and of course, we have to add these
-/// methods.
+/// Here, we have introduced abstraction to the low level components
+/// and made the high level abstraction depend on this low level abstraction
+/// rather than specific implementation details of the individual concrete
+/// implementations (of low level components).
+/// <br><br>
+/// This made our higher level component fully independent on any specific
+/// implementation of a low level component, making it testable in isolation,
+/// and increasing the flexibility.
 void main() {
-  final userPreferenceService = UserPreferenceManagerImpl();
-
   // memory
   final memoryUserPreference = MemoryUserPreference();
+  final memoryUserPreferenceService =
+      UserPreferenceManagerImpl(memoryUserPreference);
 
-  final currentMemoryUser =
-      userPreferenceService.getUserFromMemory(memoryUserPreference);
+  final currentMemoryUser = memoryUserPreferenceService.getUser();
   debugPrint(currentMemoryUser.toString());
 
   final newMemoryUser = User(uid: "uid-1234");
-  userPreferenceService.setUserToMemory(memoryUserPreference, newMemoryUser);
+  memoryUserPreferenceService.setUser(newMemoryUser);
 
   // file
   final fileUserPreference = FileUserPreference();
+  final fileUserPreferenceService =
+      UserPreferenceManagerImpl(fileUserPreference);
 
-  final currentFileUser =
-      userPreferenceService.getUserFromFile(fileUserPreference);
+  final currentFileUser = fileUserPreferenceService.getUser();
   debugPrint(currentFileUser.toString());
 
   final newFileUser = User(uid: "uid-1234");
-  userPreferenceService.setUserToFile(fileUserPreference, newFileUser);
+  fileUserPreferenceService.setUser(newFileUser);
 }
 
 ////////////////////
 // Low-level modules
 ////////////////////
-class MemoryUserPreference {
+abstract class UserPreference {
+  User getUser();
+
+  bool setUser(User user);
+}
+
+class MemoryUserPreference implements UserPreference {
+  @override
   User getUser() {
     // ...
     return User(uid: "uid-101010");
   }
 
+  @override
   bool setUser(User user) {
     // ...
     return true;
   }
 }
 
-class FileUserPreference {
+class FileUserPreference implements UserPreference {
+  @override
   User getUser() {
     // ...
     return User(uid: "uid-101010");
   }
 
+  @override
   bool setUser(User user) {
     // ...
     return true;
@@ -71,39 +82,25 @@ class FileUserPreference {
 // High-level module
 ///////////////////
 abstract class UserPreferenceManager {
-  User getUserFromMemory(MemoryUserPreference memoryUserPreference);
+  final UserPreference userPreference;
 
-  bool setUserToMemory(MemoryUserPreference memoryUserPreference, User user);
+  UserPreferenceManager(this.userPreference);
 
-  User getUserFromFile(FileUserPreference fileUserPreference);
+  User getUser();
 
-  bool setUserToFile(FileUserPreference memoryUserPreference, User user);
-
-  // Methods for other concrete dependency implementations go here
-  // ...
+  bool setUser(User user);
 }
 
-class UserPreferenceManagerImpl implements UserPreferenceManager {
+class UserPreferenceManagerImpl extends UserPreferenceManager {
+  UserPreferenceManagerImpl(super.userPreference);
+
   @override
-  User getUserFromMemory(MemoryUserPreference memoryUserPreference) {
-    return memoryUserPreference.getUser();
+  User getUser() {
+    return userPreference.getUser();
   }
 
   @override
-  bool setUserToMemory(MemoryUserPreference memoryUserPreference, User user) {
-    return memoryUserPreference.setUser(user);
+  bool setUser(User user) {
+    return userPreference.setUser(user);
   }
-
-  @override
-  User getUserFromFile(FileUserPreference fileUserPreference) {
-    return fileUserPreference.getUser();
-  }
-
-  @override
-  bool setUserToFile(FileUserPreference memoryUserPreference, User user) {
-    return memoryUserPreference.setUser(user);
-  }
-
-  // Methods for other concrete dependency implementations go here
-  // ...
 }
