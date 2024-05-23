@@ -1,23 +1,18 @@
 import 'package:dip_demo/user.dart';
 import 'package:flutter/material.dart';
 
-/// An example of DIP violation that violates the first statement of DIP.
+/// Solution of previous DIP violation that violated the first statement of DIP.
 /// <br><br>
 /// <b>High-level modules should not depend directly on low-level modules.
 /// Both should depend on abstractions.<br></b>
 /// <p>
-/// Here the high level module ([UserPreferenceManager]) still depends directly
-/// on a concrete class ([MemoryUserPreference]), but now we are constructor-
-/// injecting the dependency, giving us a bit more flexibility.
-///<br><br>
-/// Problems:
-/// - Still depending on the concrete class.
-/// - Improved flexibility, but still not following DIP as dependencies
-/// are still concrete.
-/// </p>
+/// Here the high level module ([UserPreferenceManager]) now depends on an
+/// abstraction rather that a concrete class. Now, the UserPreferenceManager is
+/// decoupled from any type of implementation of it's dependency, thus, solving
+/// the first statement of DIP.
 void main() {
-  final memoryUserPreference = MemoryUserPreference();
-  final userPreferenceService = UserPreferenceManager(memoryUserPreference);
+  final userPreference = MemoryUserPreference();
+  final userPreferenceService = UserPreferenceManager(userPreference);
 
   final currentUser = userPreferenceService.getUser();
   debugPrint(currentUser.toString());
@@ -29,12 +24,20 @@ void main() {
 ////////////////////
 // Low-level modules
 ////////////////////
-class MemoryUserPreference {
+abstract class UserPreference {
+  User getUser();
+
+  bool setUser(User user);
+}
+
+class MemoryUserPreference implements UserPreference {
+  @override
   User getUser() {
     // ...
     return User(uid: "uid-101010");
   }
 
+  @override
   bool setUser(User user) {
     // ...
     return true;
@@ -45,15 +48,15 @@ class MemoryUserPreference {
 // High-level module
 ///////////////////
 class UserPreferenceManager {
-  final MemoryUserPreference _memoryPreference;
+  final UserPreference _userPreference;
 
-  UserPreferenceManager(this._memoryPreference);
+  UserPreferenceManager(this._userPreference);
 
   User getUser() {
-    return _memoryPreference.getUser();
+    return _userPreference.getUser();
   }
 
   bool setUser(User user) {
-    return _memoryPreference.setUser(user);
+    return _userPreference.setUser(user);
   }
 }
