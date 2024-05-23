@@ -6,22 +6,35 @@ import 'package:flutter/material.dart';
 /// <b>Abstractions should not depend on details.
 /// Details should depend on abstractions<br></b>
 /// <p>
-/// Here, the [UserPreferenceManager] abstraction contain details of a
-/// lower level concrete implementation in such a way that if we introduce
-/// any change or add another variation of the low level dependency, we may
-/// need to modify the [UserPreferenceManager] as well, which violates the
-/// second statement of DIP.
+/// This is an extension of the previous step, which shows the potential
+/// problem we'd face if a high level abstraction uses concrete implementations
+/// of lower level. We Created another concrete implementation
+/// ([FileUserPreference]), and we had to change the high level abstraction in
+/// multiple ways, namely, we had to change the name of the existing methods to
+/// accommodate the upcoming 2 methods, and of course, we have to add these
+/// methods.
 void main() {
-  final memoryUserPreferenceService = UserPreferenceManagerImpl();
+  final userPreferenceService = UserPreferenceManagerImpl();
 
+  // memory
   final memoryUserPreference = MemoryUserPreference();
 
   final currentMemoryUser =
-      memoryUserPreferenceService.getUser(memoryUserPreference);
+      userPreferenceService.getUserFromMemory(memoryUserPreference);
   debugPrint(currentMemoryUser.toString());
 
   final newMemoryUser = User(uid: "uid-1234");
-  memoryUserPreferenceService.setUser(memoryUserPreference, newMemoryUser);
+  userPreferenceService.setUserToMemory(memoryUserPreference, newMemoryUser);
+
+  // file
+  final fileUserPreference = FileUserPreference();
+
+  final currentFileUser =
+      userPreferenceService.getUserFromFile(fileUserPreference);
+  debugPrint(currentFileUser.toString());
+
+  final newFileUser = User(uid: "uid-1234");
+  userPreferenceService.setUserToFile(fileUserPreference, newFileUser);
 }
 
 ////////////////////
@@ -39,23 +52,58 @@ class MemoryUserPreference {
   }
 }
 
+class FileUserPreference {
+  User getUser() {
+    // ...
+    return User(uid: "uid-101010");
+  }
+
+  bool setUser(User user) {
+    // ...
+    return true;
+  }
+}
+
+// Other concrete dependency implementations go here
+// ...
+
 ///////////////////
 // High-level module
 ///////////////////
 abstract class UserPreferenceManager {
-  User getUser(MemoryUserPreference memoryUserPreference);
+  User getUserFromMemory(MemoryUserPreference memoryUserPreference);
 
-  bool setUser(MemoryUserPreference memoryUserPreference, User user);
+  bool setUserToMemory(MemoryUserPreference memoryUserPreference, User user);
+
+  User getUserFromFile(FileUserPreference fileUserPreference);
+
+  bool setUserToFile(FileUserPreference memoryUserPreference, User user);
+
+  // Methods for other concrete dependency implementations go here
+  // ...
 }
 
 class UserPreferenceManagerImpl implements UserPreferenceManager {
   @override
-  User getUser(MemoryUserPreference memoryUserPreference) {
+  User getUserFromMemory(MemoryUserPreference memoryUserPreference) {
     return memoryUserPreference.getUser();
   }
 
   @override
-  bool setUser(MemoryUserPreference memoryUserPreference, User user) {
+  bool setUserToMemory(MemoryUserPreference memoryUserPreference, User user) {
     return memoryUserPreference.setUser(user);
   }
+
+  @override
+  User getUserFromFile(FileUserPreference fileUserPreference) {
+    return fileUserPreference.getUser();
+  }
+
+  @override
+  bool setUserToFile(FileUserPreference memoryUserPreference, User user) {
+    return memoryUserPreference.setUser(user);
+  }
+
+  // Methods for other concrete dependency implementations go here
+  // ...
 }
