@@ -6,19 +6,33 @@ import 'package:flutter/material.dart';
 /// <b>High-level modules should not depend directly on low-level modules.
 /// Both should depend on abstractions.<br></b>
 /// <p>
-/// Here the high level module ([UserPreferenceManager]) now depends on an
-/// abstraction rather that a concrete class. Now, the UserPreferenceManager is
-/// decoupled from any type of implementation of it's dependency, thus, solving
-/// the first statement of DIP.
+/// We've now added another implementation of [UserPreference] and used it.
+/// So, now(from 3rd step), the [UserPreferenceManager] can work with any
+/// [UserPreference] implementation.
+/// We can now test our [UserPreferenceManager] in isolation,
+/// with any implementation of [UserPreference], with mock
+/// implementations as well.
 void main() {
-  final userPreference = MemoryUserPreference();
-  final userPreferenceService = UserPreferenceManager(userPreference);
+  // memory pref
+  final memoryUserPreference = MemoryUserPreference();
+  final memoryUserPreferenceService =
+      UserPreferenceManager(memoryUserPreference);
 
-  final currentUser = userPreferenceService.getUser();
-  debugPrint(currentUser.toString());
+  final currentMemoryUser = memoryUserPreferenceService.getUser();
+  debugPrint(currentMemoryUser.toString());
 
-  final newUser = User(uid: "uid-1234");
-  userPreferenceService.setUser(newUser);
+  final newMemoryUser = User(uid: "uid-1234");
+  memoryUserPreferenceService.setUser(newMemoryUser);
+
+  // file pref
+  final fileUserPreference = MemoryUserPreference();
+  final fileUserPreferenceService = UserPreferenceManager(fileUserPreference);
+
+  final currentFileUser = fileUserPreferenceService.getUser();
+  debugPrint(currentFileUser.toString());
+
+  final newFileUser = User(uid: "uid-1234");
+  fileUserPreferenceService.setUser(newFileUser);
 }
 
 ////////////////////
@@ -31,6 +45,20 @@ abstract class UserPreference {
 }
 
 class MemoryUserPreference implements UserPreference {
+  @override
+  User getUser() {
+    // ...
+    return User(uid: "uid-101010");
+  }
+
+  @override
+  bool setUser(User user) {
+    // ...
+    return true;
+  }
+}
+
+class FileUserPreference implements UserPreference {
   @override
   User getUser() {
     // ...
